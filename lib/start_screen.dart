@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class StartScreen extends StatelessWidget {
-  final VoidCallback onStart;
+  final void Function(BuildContext) onStart;  // 修改成带context参数的回调
 
   const StartScreen({super.key, required this.onStart});
 
@@ -11,8 +11,8 @@ class StartScreen extends StatelessWidget {
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-              image: AssetImage('assets/images/background.png'),
-              fit: BoxFit.cover,
+            image: AssetImage('assets/images/background.png'),
+            fit: BoxFit.cover,
           ),
         ),
         child: Center(
@@ -32,7 +32,7 @@ class StartScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 100),
                 ElevatedButton(
-                  onPressed: onStart,
+                  onPressed: () => onStart(context),  // 传递context给回调
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                     backgroundColor: Colors.orangeAccent,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'start_screen.dart';
+import 'components/pins/pins.dart';
 
 void main() {
   runApp(MyApp());
@@ -13,9 +14,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Ten-Pin Bowling',
       home: StartScreen(
-        onStart: () {
-          // Navigate to main screen from here.
-          // Navigator.push(context, MaterialPageRoute(builder: (_) => GameScreen()));
+        onStart: (context) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => BowlingGamePage()),
+          );
         },
       ),
     );
