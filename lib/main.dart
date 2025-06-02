@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'start_screen.dart';
+import 'ui/start_screen.dart';
 import 'components/pins/pins.dart';
 
 void main() {
