@@ -1,6 +1,9 @@
+import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'start_screen.dart';
 import 'components/pins/pins.dart';
+import 'core/bowling_game.dart';
+import '../examples/game_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -18,6 +21,7 @@ class MyApp extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => BowlingGamePage()),
+            //MaterialPageRoute(builder: (context) => GameScreen()),
           );
         },
       ),
