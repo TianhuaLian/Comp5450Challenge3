@@ -7,7 +7,9 @@
 
 import 'package:flutter/material.dart';
 import 'dart:math';
-import './pin_data.dart';
+import 'pin_data.dart';
+import 'pin_manager.dart';
+
 
 class BowlingGamePage extends StatefulWidget {
   @override
@@ -19,10 +21,8 @@ class _BowlingGamePageState extends State<BowlingGamePage>
   final double containerWidth = 300.0;
   final double containerHeight = 500.0;
   final double pinScale = 1.8;
-  late final double singlePinWidth;
-  late final double singlePinHeight;
-  final double verticalSpacing = 20.0;
-  final double horizontalSpacing = 50.0;
+  late final double singlePinWidth = 20 * pinScale;
+  late final double singlePinHeight = 40 * pinScale;
 
   final double ballRadius = 20.0;
   double ballAngle = 0.0;
@@ -30,19 +30,21 @@ class _BowlingGamePageState extends State<BowlingGamePage>
   Offset ballVelocity = Offset.zero;
   bool ballInMotion = false;
 
-  List<PinData> pins = [];
-  List<PinData> originalPins = [];
-  int _knockedDownPinsCount = 0;
-
-  late AnimationController _ballAnimationController;
   final Random _random = Random();
+
+  late PinManager pinManager;
+  late AnimationController _ballAnimationController;
 
   @override
   void initState() {
     super.initState();
 
-    singlePinWidth = 20 * pinScale;
-    singlePinHeight = 40 * pinScale;
+    pinManager = PinManager(
+      vsync: this,
+      containerWidth: containerWidth,
+      containerHeight: containerHeight,
+      pinScale: pinScale,
+    );
 
     _ballAnimationController = AnimationController(
       vsync: this,
@@ -50,142 +52,35 @@ class _BowlingGamePageState extends State<BowlingGamePage>
     );
     _ballAnimationController.addListener(updateGame);
 
-    resetPins();
     ballPosition = Offset(containerWidth / 2, containerHeight - 50);
   }
 
   @override
   void dispose() {
     _ballAnimationController.dispose();
-    for (var pin in pins) {
-      pin.dispose();
-    }
+    pinManager.dispose();
     super.dispose();
-  }
-
-  void resetPins() {
-    for (var pin in pins) {
-      pin.dispose();
-    }
-
-    setState(() {
-      pins = [];
-      originalPins = [];
-      _knockedDownPinsCount = 0;
-
-      _addPinsInRow(count: 4, rowIndex: 0, baseTop: 100);
-      _addPinsInRow(count: 3, rowIndex: 1, baseTop: 100);
-      _addPinsInRow(count: 2, rowIndex: 2, baseTop: 100);
-      _addPinsInRow(count: 1, rowIndex: 3, baseTop: 100);
-
-      originalPins = List.from(pins.map((pin) => pin.copyWith()));
-    });
   }
 
   void resetGame() {
     setState(() {
-      for (var pin in pins) {
-        pin.dispose();
-      }
-
-      pins = List.from(originalPins.map((pinData) {
-        AnimationController newRotationController = AnimationController(
-          vsync: this,
-          duration: Duration(milliseconds: 300),
-        );
-        Animation<double> newRotationAnimation = Tween<double>(begin: 0.0, end: 0.0).animate(CurvedAnimation(
-          parent: newRotationController,
-          curve: Curves.easeOut,
-        ));
-
-        AnimationController newTranslationController = AnimationController(
-          vsync: this,
-          duration: Duration(milliseconds: 500),
-        );
-        Animation<Offset> newTranslationAnimation = Tween<Offset>(begin: Offset.zero, end: Offset.zero).animate(CurvedAnimation(
-          parent: newTranslationController,
-          curve: Curves.easeOutCubic,
-        ));
-
-        return PinData(
-          position: pinData.position,
-          rotation: 0,
-          isHit: false,
-          isFalling: false,
-          canCauseChainReaction: false,
-          translation: Offset.zero,
-          rotationController: newRotationController,
-          rotationAnimation: newRotationAnimation,
-          translationController: newTranslationController,
-          translationAnimation: newTranslationAnimation,
-        );
-      }));
-
+      pinManager.resetGame();
       ballInMotion = false;
       ballPosition = Offset(containerWidth / 2, containerHeight - 50);
       ballVelocity = Offset.zero;
       _ballAnimationController.stop();
       _ballAnimationController.reset();
-      _knockedDownPinsCount = 0;
     });
   }
 
   void clearFallenPins() {
     setState(() {
-      pins.removeWhere((pin) => pin.isHit);
+      pinManager.clearFallenPins();
     });
-  }
-
-  void _addPinsInRow({
-    required int count,
-    required int rowIndex,
-    required double baseTop,
-  }) {
-    final double rowTotalWidth = (count - 1) * horizontalSpacing + singlePinWidth;
-    final double startCenterX = (containerWidth / 2);
-    final double firstPinLeftCenterX = startCenterX - (rowTotalWidth / 2) + (singlePinWidth / 2);
-    final double bottomCenterY = baseTop + singlePinHeight / 2;
-
-    for (int i = 0; i < count; i++) {
-      AnimationController rotationController = AnimationController(
-        vsync: this,
-        duration: Duration(milliseconds: 300),
-      );
-      Animation<double> rotationAnimation = Tween<double>(begin: 0.0, end: 0.0).animate(CurvedAnimation(
-        parent: rotationController,
-        curve: Curves.easeOut,
-      ));
-
-      AnimationController translationController = AnimationController(
-        vsync: this,
-        duration: Duration(milliseconds: 500),
-      );
-      Animation<Offset> translationAnimation = Tween<Offset>(begin: Offset.zero, end: Offset.zero).animate(CurvedAnimation(
-        parent: translationController,
-        curve: Curves.easeOutCubic,
-      ));
-
-      pins.add(PinData(
-        position: Offset(firstPinLeftCenterX + (i * horizontalSpacing), bottomCenterY + (rowIndex * verticalSpacing)),
-        rotation: 0,
-        isHit: false,
-        isFalling: false,
-        canCauseChainReaction: false,
-        translation: Offset.zero,
-        rotationController: rotationController,
-        rotationAnimation: rotationAnimation,
-        translationController: translationController,
-        translationAnimation: translationAnimation,
-      ));
-    }
   }
 
   void throwBall() {
     if (ballInMotion) return;
-
-    setState(() {
-      _knockedDownPinsCount = 0;
-    });
 
     setState(() {
       ballInMotion = true;
@@ -202,6 +97,7 @@ class _BowlingGamePageState extends State<BowlingGamePage>
     setState(() {
       ballPosition += ballVelocity;
 
+      // Boundary collision handling
       if (ballPosition.dx - ballRadius <= 0) {
         ballPosition = Offset(ballRadius, ballPosition.dy);
         ballVelocity = Offset(-ballVelocity.dx * 0.7, ballVelocity.dy);
@@ -215,22 +111,22 @@ class _BowlingGamePageState extends State<BowlingGamePage>
         _ballAnimationController.stop();
         _ballAnimationController.reset();
         ballPosition = Offset(containerWidth / 2, containerHeight - 50);
-        _knockedDownPinsCount = pins.where((pin) => pin.isHit).length;
         return;
       }
 
-      for (int i = 0; i < pins.length; i++) {
-        if (!pins[i].isHit) {
+      // Pin collisions
+      for (int i = 0; i < pinManager.pins.length; i++) {
+        if (!pinManager.pins[i].isHit) {
           final Rect pinRect = Rect.fromLTWH(
-            pins[i].position.dx - singlePinWidth / 2,
-            pins[i].position.dy - singlePinHeight,
+            pinManager.pins[i].position.dx - singlePinWidth / 2,
+            pinManager.pins[i].position.dy - singlePinHeight,
             singlePinWidth,
             singlePinHeight,
           );
           final Rect ballRect = Rect.fromCircle(center: ballPosition, radius: ballRadius);
 
           if (ballRect.overlaps(pinRect)) {
-            final double relativeHitPosition = ballPosition.dx - pins[i].position.dx;
+            final double relativeHitPosition = ballPosition.dx - pinManager.pins[i].position.dx;
             double targetRotationAngle;
             if (_random.nextBool()) {
               targetRotationAngle = -pi / 2;
@@ -247,20 +143,16 @@ class _BowlingGamePageState extends State<BowlingGamePage>
               displacementX = _random.nextDouble() * 15 + 15;
             }
 
-            _startPinAnimation(pins[i], targetRotationAngle, Offset(displacementX, displacementY), canCauseChain: true);
+            _startPinAnimation(pinManager.pins[i], targetRotationAngle, Offset(displacementX, displacementY), canCauseChain: true);
 
             ballVelocity = ballVelocity * 0.8;
-            if (relativeHitPosition > 0) {
-              ballVelocity = Offset(ballVelocity.dx * 0.9, ballVelocity.dy);
-            } else {
-              ballVelocity = Offset(ballVelocity.dx * 0.9, ballVelocity.dy);
-            }
           }
         }
       }
 
-      for (int i = 0; i < pins.length; i++) {
-        final PinData fallingPin = pins[i];
+      // Chain reactions
+      for (int i = 0; i < pinManager.pins.length; i++) {
+        final PinData fallingPin = pinManager.pins[i];
         if (fallingPin.isFalling && fallingPin.rotationController!.isAnimating && fallingPin.canCauseChainReaction) {
           final double collisionZoneWidth = singlePinWidth * 0.02;
           final double collisionZoneHeight = singlePinHeight * 0.05;
@@ -273,12 +165,12 @@ class _BowlingGamePageState extends State<BowlingGamePage>
             height: collisionZoneHeight,
           );
 
-          for (int j = 0; j < pins.length; j++) {
-            if (i == j || pins[j].isHit) {
+          for (int j = 0; j < pinManager.pins.length; j++) {
+            if (i == j || pinManager.pins[j].isHit) {
               continue;
             }
 
-            final PinData standingPin = pins[j];
+            final PinData standingPin = pinManager.pins[j];
             final Rect standingPinRect = Rect.fromLTWH(
               standingPin.position.dx - singlePinWidth / 2,
               standingPin.position.dy - singlePinHeight,
@@ -359,7 +251,7 @@ class _BowlingGamePageState extends State<BowlingGamePage>
                 ),
               ),
 
-              for (var pin in pins)
+              for (var pin in pinManager.pins)
                 AnimatedBuilder(
                   animation: pin.rotationAnimation!,
                   builder: (context, child) {
@@ -445,7 +337,7 @@ class _BowlingGamePageState extends State<BowlingGamePage>
             ),
             SizedBox(height: 10),
             Text(
-              'Knocked Down: $_knockedDownPinsCount',
+              'Knocked Down: ${pinManager.knockedDownPinsCount}',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ],
