@@ -1,8 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'game_state.dart';
-import '/components/pins/pin_manager.dart';
-import '/components/pins/pin_data.dart';
+import '../game/pins/pin_manager.dart';
+import '../game/pins/pin_data.dart';
 import '/examples/ball.dart';
 import '/examples/score_manager.dart';
 

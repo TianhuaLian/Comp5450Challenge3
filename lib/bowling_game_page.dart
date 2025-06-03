@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../core/game_state.dart';
-import '/core/game_controller.dart';
-import './start_screen.dart';
-import './game_screen.dart';
-import './game_over.dart';
-import './pause.dart';
+import 'game/game_state.dart';
+import 'game/game_controller.dart';
+import 'ui/start_screen.dart';
+import 'ui/game_screen.dart';
+import 'ui/game_over.dart';
+import 'ui/pause.dart';
 
 class BowlingGamePage extends StatefulWidget {
   @override

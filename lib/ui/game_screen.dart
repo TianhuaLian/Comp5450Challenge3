@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '/core/game_controller.dart';
-import '/components/pins/pin_renderer.dart';
-import '../core/game_state.dart';
+import '../game/game_controller.dart';
+import '../game/pins/pin_renderer.dart';
+import '../game/game_state.dart';
 
 class GameScreen extends StatelessWidget {
   final GameController gameController;

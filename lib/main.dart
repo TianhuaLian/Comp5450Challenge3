@@ -1,6 +1,6 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
-import 'ui/game_page.dart';
+import 'bowling_game_page.dart';
 
 void main() {
   runApp(MyApp());
