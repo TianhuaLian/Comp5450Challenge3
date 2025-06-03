@@ -5,6 +5,7 @@ import 'ui/start_screen.dart';
 import 'ui/game_screen.dart';
 import 'ui/game_over.dart';
 import 'ui/pause.dart';
+import 'ui/scoreboard.dart';
 
 class BowlingGamePage extends StatefulWidget {
   @override
@@ -18,6 +19,7 @@ class _BowlingGamePageState extends State<BowlingGamePage>
   final double pinScale = 1.8;
 
   late GameController gameController;
+  bool showScoreboardInline = false; // 控制计分板和Score文本的互斥显示
 
   @override
   void initState() {
@@ -27,7 +29,18 @@ class _BowlingGamePageState extends State<BowlingGamePage>
       containerWidth: containerWidth,
       containerHeight: containerHeight,
       pinScale: pinScale,
-    )..addListener(() => setState(() {}));
+    )..addListener(_onGameStateChanged);
+  }
+
+  void _onGameStateChanged() {
+    setState(() {
+      if (gameController.currentState == GameState.checkingPins) {
+        showScoreboardInline = true;
+      } else if (gameController.currentState == GameState.aiming ||
+          gameController.currentState == GameState.frameEnd) {
+        showScoreboardInline = false;
+      }
+    });
   }
 
   @override
@@ -38,24 +51,29 @@ class _BowlingGamePageState extends State<BowlingGamePage>
 
   @override
   Widget build(BuildContext context) {
-    final showScore = gameController.currentState != GameState.title &&
+    final showScoreOrBoard = gameController.currentState != GameState.title &&
         gameController.currentState != GameState.gameOver;
 
     return Scaffold(
       body: Stack(
         children: [
-          _buildContent(),   // 游戏主体
-          if (showScore)
+          _buildContent(), // 游戏主体
+
+          // 记分板和Score文本互斥显示, 同时确保初始界面不显示
+          if (showScoreOrBoard)
             Positioned(
-              top: MediaQuery.of(context).padding.top + 4, // 状态栏下 4px
+              top: MediaQuery.of(context).padding.top + 4,
               left: 0,
               right: 0,
-              child: Center(
+              child: showScoreboardInline
+                  ? ScoreboardWidget(scoreManager: gameController.scoreManager)
+                  : Center(
                 child: Text(
                   'Score: ${gameController.scoreManager.totalScore}',
                   style: const TextStyle(
                     fontSize: 20,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
                   ),
                 ),
               ),
@@ -63,25 +81,20 @@ class _BowlingGamePageState extends State<BowlingGamePage>
         ],
       ),
     );
-  } // 这里加了右大括号！！！
+  }
 
-  // 这个函数要在类作用域里，**不是**build方法内部
   Widget _buildContent() {
     switch (gameController.currentState) {
       case GameState.title:
-        return StartScreen(
-            onStart: gameController.startGame
-        );
+        return StartScreen(onStart: gameController.startGame);
       case GameState.gameOver:
         return GameOverScreen(
           totalScore: gameController.scoreManager.totalScore,
           onRestart: gameController.restartGame,
-          onScoreboard: gameController.showScoreboard,
+          onScoreboard: () => showScoreboard(context),
         );
       case GameState.pause:
-        return Pause(
-          onResume: gameController.resumeGame,
-        );
+        return Pause(onResume: gameController.resumeGame);
       default:
         return GameScreen(
           gameController: gameController,
@@ -90,5 +103,21 @@ class _BowlingGamePageState extends State<BowlingGamePage>
           pinScale: pinScale,
         );
     }
+  }
+
+  void showScoreboard(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Leaderboard'),
+        content: ScoreboardWidget(scoreManager: gameController.scoreManager),
+        actions: [
+          TextButton(
+            child: const Text('Close'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
   }
 }

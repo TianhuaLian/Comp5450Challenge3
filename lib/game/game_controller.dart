@@ -273,17 +273,39 @@ class GameController with ChangeNotifier {
     notifyListeners();
   }
 
+  // void nextFrame() {
+  //   if (_currentState != GameState.frameEnd) return;
+  //
+  //   if (_currentFrame == 10) {
+  //     if (scoreManager.isStrike(10) || scoreManager.isSpare(10)) {
+  //       // Allow for third roll
+  //       _currentRoll = 3;
+  //       resetGame();
+  //       _currentState = GameState.aiming;
+  //     } else {
+  //       _currentState = GameState.gameOver;
+  //     }
+  //   } else {
+  //     _currentFrame++;
+  //     _currentRoll = 1;
+  //     resetGame();
+  //     _currentState = GameState.aiming;
+  //   }
+  //
+  //   notifyListeners();
+  // }
   void nextFrame() {
     if (_currentState != GameState.frameEnd) return;
 
     if (_currentFrame == 10) {
-      if (scoreManager.isStrike(10) || scoreManager.isSpare(10)) {
-        // Allow for third roll
-        _currentRoll = 3;
+      // === 核心修正：第10局投球完毕，才gameOver ===
+      if (scoreManager.isGameOver) {
+        _currentState = GameState.gameOver;
+      } else {
+        // 还没结束，推进到下一球（roll）
+        _currentRoll += 1;
         resetGame();
         _currentState = GameState.aiming;
-      } else {
-        _currentState = GameState.gameOver;
       }
     } else {
       _currentFrame++;

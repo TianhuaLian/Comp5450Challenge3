@@ -4,7 +4,7 @@ class ScoreManager {
   final List<Frame> frames = List.generate(11, (index) => Frame());
 
   int get totalScore {
-    return frames.sublist(1,11).fold(0, (sum, frame) => sum + frame.score);
+    return frames.sublist(1, 11).fold(0, (sum, frame) => sum + frame.score);
   }
 
   void updateScore(int frame, int roll, int pins) {
@@ -15,11 +15,23 @@ class ScoreManager {
   bool isStrike(int frame) => frames[frame].isStrike;
   bool isSpare(int frame) => frames[frame].isSpare;
 
-  void _calculateScores() {
+  /// 判断是否游戏结束（第10局打完就结束）
+  bool get isGameOver {
+    final f10 = frames[10];
+    // 没有第一球还没结束
+    if (f10.roll1 == null) return false;
+    // 第一球不是strike，也不是spare，两球就结束
+    if (!f10.isStrike && !f10.isSpare) {
+      return f10.roll2 != null;
+    }
+    // strike/spare要打到第三球才结束
+    return f10.roll2 != null && f10.roll3 != null;
+  }
 
+  void _calculateScores() {
+    int runningTotal = 0;
     for (int i = 1; i <= 10; i++) {
       final f = frames[i];
-
 
       int r1 = f.roll1 ?? 0;
       int r2 = f.roll2 ?? 0;
@@ -27,36 +39,26 @@ class ScoreManager {
 
       if (i == 10) {
         f.score = r1 + r2 + r3;
-        continue;
-      }
-
-      if (f.isStrike) {
-
+      } else if (f.isStrike) {
         final next = frames[i + 1];
         int next1 = next.roll1 ?? 0;
-        int next2;
-        if (next.isStrike && i < 9) {
-
-          final nextNext = frames[i + 2];
-          next2 = nextNext.roll1 ?? 0;
-        } else {
-          next2 = next.roll2 ?? 0;
-        }
+        int next2 = next.isStrike && i < 9 ? (frames[i + 2].roll1 ?? 0) : (next.roll2 ?? 0);
         f.score = 10 + next1 + next2;
-      }
-
-      else if (f.isSpare) {
-        final next = frames[i + 1];
-        int next1 = next.roll1 ?? 0;
-        f.score = 10 + next1;
-      }
-
-      else {
+      } else if (f.isSpare) {
+        f.score = 10 + (frames[i + 1].roll1 ?? 0);
+      } else {
         f.score = r1 + r2;
+      }
+
+      // 只有当前局投过，才累计分
+      if (f.hasPlayed) {
+        runningTotal += f.score;
+        f.cumulativeScore = runningTotal;
+      } else {
+        f.cumulativeScore = 0;
       }
     }
   }
-
 
   void reset() {
     for (var frame in frames) {
@@ -70,9 +72,25 @@ class Frame {
   int? roll2;
   int? roll3; // For 10th frame
   int score = 0;
+  int cumulativeScore = 0; //累计得分
 
   bool get isStrike => roll1 == 10;
-  bool get isSpare => (roll1 ?? 0) + (roll2 ?? 0) == 10 && !isStrike;
+  bool get isSpare => (roll1 ?? 0) + (roll2 ?? 0) == 10 && roll1 != 10;
+  bool get hasPlayed => roll1 != null || roll2 != null || roll3 != null;
+
+  // 用于计分板UI的投球结果显示
+  String rollDisplay(int rollNumber) {
+    if (rollNumber == 1) {
+      return roll1 == 10 ? 'X' : (roll1 ?? '-').toString();
+    } else if (rollNumber == 2) {
+      if (isStrike) return '-';
+      if (isSpare) return '/';
+      return (roll2 ?? '-').toString();
+    } else if (rollNumber == 3 && (isSpare || isStrike)) {
+      return roll3 == 10 ? 'X' : (roll3 ?? '-').toString();
+    }
+    return '-';
+  }
 
   void updateRoll(int roll, int pins) {
     if (roll == 1) roll1 = pins;
@@ -85,5 +103,6 @@ class Frame {
     roll2 = null;
     roll3 = null;
     score = 0;
+    cumulativeScore = 0;
   }
 }
