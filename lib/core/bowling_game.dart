@@ -3,7 +3,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
 import 'game_state.dart';
-import '../examples/ball_component.dart';
+import '../examples/ball.dart';
 import '../examples/collision_manager.dart';
 import '../examples/pin_manager.dart';
 import '../examples/score_manager.dart';
@@ -23,7 +23,7 @@ class BowlingGame extends FlameGame with HasCollisionDetection, ChangeNotifier {
           .last;
 
   // Subsystem references
-  late BallComponent ball;
+  //late BallComponent ball;
   late CollisionManager collisionSystem;
   late PinManager pinManager;
   late ScoreManager scoreManager;
@@ -34,13 +34,13 @@ class BowlingGame extends FlameGame with HasCollisionDetection, ChangeNotifier {
   @override
   Future<void> onLoad() async {
     // Initialize subsystems
-    ball = BallComponent();
+    //ball = BallComponent();
     collisionSystem = CollisionManager();
     pinManager = PinManager();
     scoreManager = ScoreManager();
 
     // Register subsystems with the FlameGame
-    await add(ball);
+    //await add(ball);
     await add(collisionSystem);
     await add(pinManager);
     await add(scoreManager);
@@ -174,7 +174,7 @@ class BowlingGame extends FlameGame with HasCollisionDetection, ChangeNotifier {
     // Reset pins and ball for the next frame
     // TODO: Determine fullRack vs. spare/partial logic
     pinManager.resetPins(fullRack: true);
-    ball.resetPosition();
+    //ball.resetPosition();
 
     // Clear per-roll counter
     _pinsKnockedThisRoll = 0;
@@ -191,7 +191,7 @@ class BowlingGame extends FlameGame with HasCollisionDetection, ChangeNotifier {
 
     // Reset pins and ball
     pinManager.resetPins(fullRack: true);
-    ball.resetPosition();
+    //ball.resetPosition();
 
     // Clear any overlays and show Title
     pauseEngine();

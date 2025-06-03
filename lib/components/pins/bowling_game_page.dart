@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import 'pin_data.dart';
 import 'pin_manager.dart';
-
+import '/examples/ball.dart';
 
 class BowlingGamePage extends StatefulWidget {
   @override
@@ -24,21 +24,19 @@ class _BowlingGamePageState extends State<BowlingGamePage>
   late final double singlePinWidth = 20 * pinScale;
   late final double singlePinHeight = 40 * pinScale;
 
-  final double ballRadius = 20.0;
+  late Ball ball;
   double ballAngle = 0.0;
-  Offset ballPosition = Offset.zero;
-  Offset ballVelocity = Offset.zero;
-  bool ballInMotion = false;
+  late AnimationController _ballAnimationController;
 
   final Random _random = Random();
 
   late PinManager pinManager;
-  late AnimationController _ballAnimationController;
 
   @override
   void initState() {
     super.initState();
 
+    // Initialize PinManager instance
     pinManager = PinManager(
       vsync: this,
       containerWidth: containerWidth,
@@ -46,13 +44,19 @@ class _BowlingGamePageState extends State<BowlingGamePage>
       pinScale: pinScale,
     );
 
+    // Initialize Ball instance
+    ball = Ball(
+      position: Offset(containerWidth / 2, containerHeight - 50),
+      radius: 20.0,
+      containerWidth: containerWidth,
+      containerHeight: containerHeight,
+    );
+
     _ballAnimationController = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 16),
     );
     _ballAnimationController.addListener(updateGame);
-
-    ballPosition = Offset(containerWidth / 2, containerHeight - 50);
   }
 
   @override
@@ -65,9 +69,7 @@ class _BowlingGamePageState extends State<BowlingGamePage>
   void resetGame() {
     setState(() {
       pinManager.resetGame();
-      ballInMotion = false;
-      ballPosition = Offset(containerWidth / 2, containerHeight - 50);
-      ballVelocity = Offset.zero;
+      ball.reset(Offset(containerWidth / 2, containerHeight - 50));
       _ballAnimationController.stop();
       _ballAnimationController.reset();
     });
@@ -80,37 +82,26 @@ class _BowlingGamePageState extends State<BowlingGamePage>
   }
 
   void throwBall() {
-    if (ballInMotion) return;
+    if (ball.inMotion) return;
 
     setState(() {
-      ballInMotion = true;
-      double radians = ballAngle * pi / 180;
-      ballVelocity = Offset(sin(radians) * 8, -cos(radians) * 8);
+      ball.throwBall(ballAngle);
     });
 
     _ballAnimationController.repeat();
   }
 
   void updateGame() {
-    if (!ballInMotion) return;
+    if (!ball.inMotion) return;
 
     setState(() {
-      ballPosition += ballVelocity;
+      ball.updatePosition();
 
-      // Boundary collision handling
-      if (ballPosition.dx - ballRadius <= 0) {
-        ballPosition = Offset(ballRadius, ballPosition.dy);
-        ballVelocity = Offset(-ballVelocity.dx * 0.7, ballVelocity.dy);
-      } else if (ballPosition.dx + ballRadius >= containerWidth) {
-        ballPosition = Offset(containerWidth - ballRadius, ballPosition.dy);
-        ballVelocity = Offset(-ballVelocity.dx * 0.7, ballVelocity.dy);
-      }
-
-      if (ballPosition.dy + ballRadius <= 0 || ballPosition.dy - ballRadius >= containerHeight) {
-        ballInMotion = false;
+      if (ball.isOutOfBounds()) {
+        ball.inMotion = false;
         _ballAnimationController.stop();
         _ballAnimationController.reset();
-        ballPosition = Offset(containerWidth / 2, containerHeight - 50);
+        ball.reset(Offset(containerWidth / 2, containerHeight - 50));
         return;
       }
 
@@ -123,10 +114,10 @@ class _BowlingGamePageState extends State<BowlingGamePage>
             singlePinWidth,
             singlePinHeight,
           );
-          final Rect ballRect = Rect.fromCircle(center: ballPosition, radius: ballRadius);
+          final Rect ballRect = Rect.fromCircle(center: ball.position, radius: ball.radius);
 
           if (ballRect.overlaps(pinRect)) {
-            final double relativeHitPosition = ballPosition.dx - pinManager.pins[i].position.dx;
+            final double relativeHitPosition = ball.position.dx - pinManager.pins[i].position.dx;
             double targetRotationAngle;
             if (_random.nextBool()) {
               targetRotationAngle = -pi / 2;
@@ -145,7 +136,7 @@ class _BowlingGamePageState extends State<BowlingGamePage>
 
             _startPinAnimation(pinManager.pins[i], targetRotationAngle, Offset(displacementX, displacementY), canCauseChain: true);
 
-            ballVelocity = ballVelocity * 0.8;
+            ball.velocity = ball.velocity * 0.8;
           }
         }
       }
@@ -279,11 +270,11 @@ class _BowlingGamePageState extends State<BowlingGamePage>
                 ),
 
               Positioned(
-                left: ballPosition.dx - ballRadius,
-                top: ballPosition.dy - ballRadius,
+                left: ball.position.dx - ball.radius,
+                top: ball.position.dy - ball.radius,
                 child: Container(
-                  width: ballRadius * 2,
-                  height: ballRadius * 2,
+                  width: ball.radius * 2,
+                  height: ball.radius * 2,
                   decoration: BoxDecoration(
                     color: Colors.black,
                     shape: BoxShape.circle,
