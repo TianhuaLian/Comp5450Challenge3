@@ -1,7 +1,7 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'start_screen.dart';
-import 'components/pins/pins.dart';
+import 'components/pins/bowling_game_page.dart';
 import 'core/bowling_game.dart';
 import '../examples/game_screen.dart';
 
