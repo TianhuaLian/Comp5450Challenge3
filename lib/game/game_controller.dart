@@ -4,7 +4,7 @@ import 'game_state.dart';
 import '../game/pins/pin_manager.dart';
 import '../game/pins/pin_data.dart';
 import '/examples/ball.dart';
-import '/examples/score_manager.dart';
+import '../score/score_manager.dart';
 
 class GameController with ChangeNotifier {
   final TickerProvider vsync;

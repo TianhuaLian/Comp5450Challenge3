@@ -16,10 +16,47 @@ class ScoreManager {
   bool isSpare(int frame) => frames[frame].isSpare;
 
   void _calculateScores() {
-    debugPrint('[Game] Calculating Scores......');
-    // Implement bowling scoring rules here
-    // This would handle strikes, spares, and frame accumulation
+
+    for (int i = 1; i <= 10; i++) {
+      final f = frames[i];
+
+
+      int r1 = f.roll1 ?? 0;
+      int r2 = f.roll2 ?? 0;
+      int r3 = f.roll3 ?? 0;
+
+      if (i == 10) {
+        f.score = r1 + r2 + r3;
+        continue;
+      }
+
+      if (f.isStrike) {
+
+        final next = frames[i + 1];
+        int next1 = next.roll1 ?? 0;
+        int next2;
+        if (next.isStrike && i < 9) {
+
+          final nextNext = frames[i + 2];
+          next2 = nextNext.roll1 ?? 0;
+        } else {
+          next2 = next.roll2 ?? 0;
+        }
+        f.score = 10 + next1 + next2;
+      }
+
+      else if (f.isSpare) {
+        final next = frames[i + 1];
+        int next1 = next.roll1 ?? 0;
+        f.score = 10 + next1;
+      }
+
+      else {
+        f.score = r1 + r2;
+      }
+    }
   }
+
 
   void reset() {
     for (var frame in frames) {

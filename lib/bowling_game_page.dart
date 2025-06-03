@@ -38,8 +38,33 @@ class _BowlingGamePageState extends State<BowlingGamePage>
 
   @override
   Widget build(BuildContext context) {
+    final showScore = gameController.currentState != GameState.title &&
+        gameController.currentState != GameState.gameOver;
+
     return Scaffold(
-      body: _buildContent(),
+      body: Column(
+        children: [
+          if (showScore)
+            SafeArea(
+              child: Container(
+                width: double.infinity,
+                alignment: Alignment.center,
+                padding: EdgeInsets.only(top: 8, bottom: 8),
+                child: Text(
+                  'Score: ${gameController.scoreManager.totalScore}',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          Expanded(
+            child: _buildContent(),
+          ),
+        ],
+      ),
     );
   }
 
