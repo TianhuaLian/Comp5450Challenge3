@@ -42,32 +42,30 @@ class _BowlingGamePageState extends State<BowlingGamePage>
         gameController.currentState != GameState.gameOver;
 
     return Scaffold(
-      body: Column(
+      body: Stack(
         children: [
+          _buildContent(),   // 游戏主体
           if (showScore)
-            SafeArea(
-              child: Container(
-                width: double.infinity,
-                alignment: Alignment.center,
-                padding: EdgeInsets.only(top: 8, bottom: 8),
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 4, // 状态栏下 4px
+              left: 0,
+              right: 0,
+              child: Center(
                 child: Text(
                   'Score: ${gameController.scoreManager.totalScore}',
-                  style: TextStyle(
-                    color: Colors.black87,
-                    fontSize: 18,
+                  style: const TextStyle(
+                    fontSize: 20,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
             ),
-          Expanded(
-            child: _buildContent(),
-          ),
         ],
       ),
     );
-  }
+  } // 这里加了右大括号！！！
 
+  // 这个函数要在类作用域里，**不是**build方法内部
   Widget _buildContent() {
     switch (gameController.currentState) {
       case GameState.title:
