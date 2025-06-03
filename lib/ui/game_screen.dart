@@ -24,15 +24,20 @@ class GameScreen extends StatelessWidget {
         Container(
           width: double.infinity,
           height: double.infinity,
-          color: Colors.grey,
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/background.png'),
+              fit: BoxFit.cover,
+            ),
+          ),
         ),
 
         /// Game content
         Container(
-          margin: EdgeInsets.symmetric(horizontal: 50, vertical: 80),
+          margin: EdgeInsets.symmetric(horizontal: 35, vertical: 95),
           width: containerWidth,
           height: containerHeight,
-          color: Colors.brown[200],
+          color: Colors.white.withOpacity(0),
           child: Stack(
             alignment: Alignment.center,
             children: [
