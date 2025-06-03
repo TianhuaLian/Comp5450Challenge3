@@ -105,6 +105,28 @@ class GameScreen extends StatelessWidget {
           ),
         ),
 
+        // Special result overlay
+        if (gameController.currentState == GameState.checkingPins &&
+            gameController.specialResult != null)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black38,
+              child: Center(
+                child: Text(
+                  gameController.specialResult!,
+                  style: TextStyle(
+                    fontSize: 48,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.yellow,
+                    shadows: [
+                      Shadow(blurRadius: 10, color: Colors.black)
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
         /// Bottom controls
         Positioned(
           bottom: 0,
@@ -120,8 +142,8 @@ class GameScreen extends StatelessWidget {
     switch (gameController.currentState) {
       case GameState.aiming:
         return _buildAimingControls();
-      case GameState.checkingPins:
-        return _buildCheckingPinsControls();
+      /*case GameState.checkingPins:
+        return _buildCheckingPinsControls();*/
       case GameState.frameEnd:
         return _buildFrameEndControls();
       default:
