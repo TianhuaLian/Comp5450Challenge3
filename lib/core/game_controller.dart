@@ -1,17 +1,12 @@
-// CONTROL FUNCTIONS:
-// ------------------
-// Ball control: throwBall() - Handles ball throwing physics and movement
-// Score tracking: knockedDownPinsCount (getter) - Counts hit pins, displayed in UI
-// Full game reset: resetGame() - Resets all pins, ball position and game state
-// Clear fallen pins: clearFallenPins() - Removes already knocked down pins
-
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'game_state.dart';
 import '/components/pins/pin_manager.dart';
 import '/components/pins/pin_data.dart';
 import '/examples/ball.dart';
+import '/examples/score_manager.dart';
 
-class GameController {
+class GameController with ChangeNotifier {
   final TickerProvider vsync;
   final double containerWidth;
   final double containerHeight;
@@ -19,11 +14,28 @@ class GameController {
 
   late Ball ball;
   late PinManager pinManager;
+  late ScoreManager scoreManager;
   late AnimationController ballAnimationController;
 
-  double ballAngle = 0.0;
+  // Current game state
+  GameState _currentState = GameState.title;
+  GameState get currentState => _currentState;
+
+  int _currentFrame = 1;
+  int _currentRoll = 1;
+  double _ballAngle = 0.0;
+  
   bool get ballInMotion => ball.inMotion;
   int get knockedDownPinsCount => pinManager.knockedDownPinsCount;
+  int get totalScore => scoreManager.totalScore;
+  int get currentFrame => _currentFrame;
+  int get currentRoll => _currentRoll;
+
+  double get ballAngle => _ballAngle;
+  set ballAngle(double value) {
+    _ballAngle = value;
+    notifyListeners();
+  }
 
   GameController({
     required this.vsync,
@@ -43,6 +55,9 @@ class GameController {
       pinScale: pinScale,
     );
 
+    // Initialize ScoreManager instance
+    scoreManager = ScoreManager();
+
     // Initialize Ball instance
     ball = Ball(
       position: Offset(containerWidth / 2, containerHeight - 50),
@@ -57,13 +72,43 @@ class GameController {
     )..addListener(_updateGame);
   }
 
-  void throwBall() {
-    if (ball.inMotion) return;
-
-    ball.throwBall(ballAngle);
-    ballAnimationController.repeat();
+  void startGame() {
+    _currentState = GameState.aiming;
+    _currentFrame = 1;
+    _currentRoll = 1;
+    resetGame();
+    notifyListeners();
   }
 
+  void pauseGame() {
+    if (_currentState == GameState.rolling) {
+      ballAnimationController.stop();
+    }
+    _currentState = GameState.pause;
+    notifyListeners();
+  }
+
+  void resumeGame() {
+    if (_currentState == GameState.pause) {
+      _currentState = GameState.aiming;
+      if (ball.inMotion) {
+        ballAnimationController.repeat();
+        _currentState = GameState.rolling;
+      }
+      notifyListeners();
+    }
+  }
+
+  void throwBall() {
+    if (_currentState != GameState.aiming) return;
+
+    ball.throwBall(_ballAngle);
+    ballAnimationController.repeat();
+    _currentState = GameState.rolling;
+    notifyListeners();
+  }
+
+  /// Resets the game state, including the ball and pin states.
   void resetGame() {
     pinManager.resetGame();
     ball.reset(Offset(containerWidth / 2, containerHeight - 50));
@@ -71,20 +116,19 @@ class GameController {
     ballAnimationController.reset();
   }
 
-  void clearFallenPins() {
-    pinManager.clearFallenPins();
+  /// Restarts the game and starting a new game.
+  void restartGame() {
+    scoreManager.reset();
+    startGame();
   }
 
   void _updateGame() {
-    if (!ball.inMotion) return;
+    if (_currentState != GameState.rolling) return;
 
     ball.updatePosition();
 
     if (ball.isOutOfBounds()) {
-      ball.reset(Offset(containerWidth / 2, containerHeight - 50));
-      ballAnimationController.stop();
-      ballAnimationController.reset();
-      return;
+      _handleBallStop();
     }
 
     // Pin collisions
@@ -198,6 +242,59 @@ class GameController {
     }
   }
 
+  void _handleBallStop() {
+    ball.reset(Offset(containerWidth / 2, containerHeight - 50));
+    ballAnimationController.stop();
+    ballAnimationController.reset();
+
+    // Update score
+    final pinsKnocked = pinManager.knockedDownPinsCount;
+    scoreManager.updateScore(_currentFrame, _currentRoll, pinsKnocked);
+
+    _currentState = GameState.checkingPins;
+    notifyListeners();
+  }
+
+  void clearFallenPins() {
+    if (_currentState != GameState.checkingPins) return;
+
+    pinManager.clearFallenPins();
+
+    // Determine next state
+    if (_currentRoll == 1 && !scoreManager.isStrike(_currentFrame)) {
+      // Second roll in same frame
+      _currentRoll = 2;
+      _currentState = GameState.aiming;
+    } else {
+      // Frame complete
+      _currentState = GameState.frameEnd;
+    }
+
+    notifyListeners();
+  }
+
+  void nextFrame() {
+    if (_currentState != GameState.frameEnd) return;
+
+    if (_currentFrame == 10) {
+      if (scoreManager.isStrike(10) || scoreManager.isSpare(10)) {
+        // Allow for third roll
+        _currentRoll = 3;
+        resetGame();
+        _currentState = GameState.aiming;
+      } else {
+        _currentState = GameState.gameOver;
+      }
+    } else {
+      _currentFrame++;
+      _currentRoll = 1;
+      resetGame();
+      _currentState = GameState.aiming;
+    }
+
+    notifyListeners();
+  }
+
   void _startPinAnimation(PinData pin, double targetRotationAngle, Offset targetTranslation,
       {required bool canCauseChain}) {
     pin.isHit = true;
@@ -232,5 +329,10 @@ class GameController {
   void dispose() {
     ballAnimationController.dispose();
     pinManager.dispose();
+    super.dispose();
+  }
+
+  void showScoreboard() {
+    debugPrint('[GameController] Show Scoreboard');
   }
 }
