@@ -79,20 +79,3 @@ class PinData {
     translationController?.dispose();
   }
 }
-
-
-class PinImage extends StatelessWidget {
-  final double scale;
-
-  const PinImage({super.key, this.scale = 1.0});
-
-  @override
-  Widget build(BuildContext context) {
-    return Image.network(
-      'https://i.imgur.com/cTVjcFA.png',
-      width: 20 * scale,
-      height: 40 * scale,
-      fit: BoxFit.contain,
-    );
-  }
-}

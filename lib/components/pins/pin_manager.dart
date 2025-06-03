@@ -1,5 +1,4 @@
-// Score tracking: _knockedDownPinsCount (variable) - Counts hit pins, displayed in UI
-
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'pin_data.dart';
 
@@ -16,6 +15,9 @@ class PinManager {
   List<PinData> pins = [];
   List<PinData> originalPins = [];
 
+  final Random _random = Random();
+
+  Random get random => _random;
   int get knockedDownPinsCount => pins.where((pin) => pin.isHit).length;
 
   PinManager({
