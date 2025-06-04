@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../game/game_controller.dart';
 import '../game/pins/pin_renderer.dart';
@@ -26,36 +27,50 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> {
   bool _showScoreboard = false;
   Offset? _swipeStart;
-  DateTime? _swipeStartTime;
 
   @override
   Widget build(BuildContext context) {
-    // Wrap the whole Stack with GestureDetector for better swipe detection
+    // Wrap the whole Stack with GestureDetector
     return GestureDetector(
-      onPanStart: (details) {
-        if (widget.gameController.currentState == GameState.aiming) {
-          _swipeStart = details.localPosition;
-          _swipeStartTime = DateTime.now();
-        }
-      },
-      onPanEnd: (details) {
+      onPanUpdate: (details) {
+        // Continuously record finger’s position
         if (widget.gameController.currentState == GameState.aiming &&
             _swipeStart != null) {
-          final velocity = details.velocity.pixelsPerSecond;
-          final dx = velocity.dx;
-          final dy = velocity.dy;
+          // Overwrite the end‐position each update
+          _lastSwipeEnd = details.localPosition;
+        }
+      },
+      onPanStart: (details) => _swipeStart = details.localPosition,
+      onPanEnd: (details) {
+        if (widget.gameController.currentState == GameState.aiming &&
+            _swipeStart != null && _lastSwipeEnd != null) {
+          final Offset swipeEnd = _lastSwipeEnd!;
+          final Offset swipeVec = swipeEnd - _swipeStart!;
 
-          // Only consider upward swipes (negative dy)
-          if (dy < -200) {
-            // Calculate angle: left/right swipe affects angle
-            final angle = (dx / 1000).clamp(-1.0, 1.0) * 45; // -45° to 45°
-            widget.gameController.ballAngle = angle;
-
-            // Optionally, use dy for power (not shown here)
-            widget.gameController.throwBall();
+          // If swipe is too small, ignore
+          if (swipeVec.distance < 10) {
+            _swipeStart = null;
+            _lastSwipeEnd = null;
+            return;
           }
+
+          // Upward drag = 0°
+          final double radians = atan2(swipeVec.dx, -swipeVec.dy);
+          final double degrees = radians * 180 / pi;
+
+          // Clamp angle to [-45°, +45°]
+          final double clampedAngle = degrees.clamp(-45.0, 45.0);
+          widget.gameController.ballAngle = clampedAngle;
+
+          // Power: map drag length to some max velocity
+          /*final double maxDragDistance = 200.0;
+          final double powerRatio = (swipeVec.distance / maxDragDistance).clamp(0.0, 1.0);
+          widget.gameController.ballPower = powerRatio * 300;*/
+
+          widget.gameController.throwBall();
+
           _swipeStart = null;
-          _swipeStartTime = null;
+          _lastSwipeEnd = null;
         }
       },
       child: Stack(
@@ -238,6 +253,7 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
+  Offset? _lastSwipeEnd;
   Widget _buildGameControls() {
     switch (widget.gameController.currentState) {
       case GameState.aiming:

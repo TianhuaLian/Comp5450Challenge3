@@ -33,7 +33,7 @@ class ScoreboardWidget extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // 投球结果
+                /// Display Score
                 _displayScore(index + 1, frame),
                 const SizedBox(height: 4),
                 // Show score only if the frame has been played
