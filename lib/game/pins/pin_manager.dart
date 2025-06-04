@@ -4,13 +4,12 @@ import 'pin_data.dart';
 
 class PinManager {
   final TickerProvider vsync;
-  final double containerWidth;
-  final double containerHeight;
   final double pinScale;
   late final double singlePinWidth;
   late final double singlePinHeight;
   final double verticalSpacing = 20.0;
   final double horizontalSpacing = 50.0;
+  final double startCenterX;
 
   List<PinData> pins = [];
   List<PinData> originalPins = [];
@@ -22,8 +21,7 @@ class PinManager {
 
   PinManager({
     required this.vsync,
-    required this.containerWidth,
-    required this.containerHeight,
+    required this.startCenterX,
     required this.pinScale,
   }) {
     singlePinWidth = 20 * pinScale;
@@ -53,7 +51,6 @@ class PinManager {
     required double baseTop,
   }) {
     final double rowTotalWidth = (count - 1) * horizontalSpacing + singlePinWidth;
-    final double startCenterX = (containerWidth / 2);
     final double firstPinLeftCenterX = startCenterX - (rowTotalWidth / 2) + (singlePinWidth / 2);
     final double bottomCenterY = baseTop + singlePinHeight / 2;
 

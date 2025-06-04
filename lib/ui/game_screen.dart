@@ -3,6 +3,7 @@ import '../game/game_controller.dart';
 import '../game/pins/pin_renderer.dart';
 import '../game/game_state.dart';
 import '../ui/scoreboard.dart';
+import '../ui/settings_menu.dart';
 
 class GameScreen extends StatefulWidget {
   final GameController gameController;
@@ -73,8 +74,8 @@ class _GameScreenState extends State<GameScreen> {
 
         /// Game content
         Container(
-          margin: EdgeInsets.symmetric(horizontal: 50, vertical: 96),
-          width: widget.containerWidth,
+          margin: EdgeInsets.symmetric(horizontal: 25, vertical: 96),
+          width: widget.containerWidth + widget.gameController.ball.radius * 2,
           height: widget.containerHeight,
           color: Colors.white.withOpacity(0),
 
@@ -106,8 +107,7 @@ class _GameScreenState extends State<GameScreen> {
                 animation: widget.gameController.ballAnimationController,
                 builder: (context, _) {
                   return Positioned(
-                    left: widget.gameController.ball.position.dx -
-                        widget.gameController.ball.radius,
+                    left: widget.gameController.ball.position.dx,
                     top: widget.gameController.ball.position.dy -
                         widget.gameController.ball.radius,
                     child: Container(
@@ -132,15 +132,40 @@ class _GameScreenState extends State<GameScreen> {
         /// Game UI overlay
         /// Toggle Scoreboard button and pause button
         Positioned(
-          bottom: 200,
+          top: 100,
           right: 10,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
-                icon: Icon(Icons.insert_chart_outlined, color: Colors.white),
+                icon: Icon(Icons.pause, color: Colors.black),
                 style: IconButton.styleFrom(
-                  backgroundColor: Colors.black54,
+                  backgroundColor: Colors.white70,
+                  padding: EdgeInsets.all(10),
+                ),
+                onPressed: widget.gameController.pauseGame,
+              ),
+              SizedBox(height: 10),
+              IconButton(
+                icon: Icon(Icons.settings, color: Colors.black),
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.white70,
+                  padding: EdgeInsets.all(10),
+                ),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => Dialog(
+                      child: SettingsMenu(gameController: widget.gameController),
+                    ),
+                  );
+                },
+              ),
+              SizedBox(height: 10),
+              IconButton(
+                icon: Icon(Icons.insert_chart_outlined, color: Colors.black),
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.white70,
                   padding: EdgeInsets.all(10),
                 ),
                 onPressed: () {
@@ -148,15 +173,6 @@ class _GameScreenState extends State<GameScreen> {
                     _showScoreboard = !_showScoreboard;
                   });
                 },
-              ),
-              SizedBox(height: 10),
-              IconButton(
-                icon: Icon(Icons.pause, color: Colors.white),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.black54,
-                  padding: EdgeInsets.all(10),
-                ),
-                onPressed: widget.gameController.pauseGame,
               ),
             ],
           ),

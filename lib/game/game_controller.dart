@@ -30,6 +30,7 @@ class GameController with ChangeNotifier {
   int _currentFrame = 1;
   int _currentRoll = 1;
   double _ballAngle = 0.0;
+  double middleX = 0.0;
 
   bool get ballInMotion => ball.inMotion;
   int get knockedDownPinsCount => pinManager.knockedDownPinsCount;
@@ -40,6 +41,15 @@ class GameController with ChangeNotifier {
   double get ballAngle => _ballAngle;
   set ballAngle(double value) {
     _ballAngle = value;
+    notifyListeners();
+  }
+
+  // Toggle for wall bounce
+  bool _enableBounce = true;
+
+  bool get enableBounce => _enableBounce;
+  set enableBounce(bool value) {
+    _enableBounce = value;
     notifyListeners();
   }
 
@@ -61,17 +71,6 @@ class GameController with ChangeNotifier {
   }
 
   void _init() {
-    // Initialize PinManager instance
-    pinManager = PinManager(
-      vsync: vsync,
-      containerWidth: containerWidth,
-      containerHeight: containerHeight,
-      pinScale: pinScale,
-    );
-
-    // Initialize ScoreManager instance
-    scoreManager = ScoreManager();
-
     // Initialize Ball instance
     ball = Ball(
       position: Offset(containerWidth / 2, containerHeight - 50),
@@ -79,6 +78,23 @@ class GameController with ChangeNotifier {
       containerWidth: containerWidth,
       containerHeight: containerHeight,
     );
+
+    if (_enableBounce)
+      {
+        middleX = containerWidth / 2 - ball.radius;
+      } else {
+      middleX = containerWidth / 2 + ball.radius / 2;
+    }
+
+    // Initialize PinManager instance
+    pinManager = PinManager(
+      vsync: vsync,
+      startCenterX: _enableBounce? middleX + ball.radius * 2: middleX + ball.radius / 2,
+      pinScale: pinScale,
+    );
+
+    // Initialize ScoreManager instance
+    scoreManager = ScoreManager();
 
     ballAnimationController = AnimationController(
       vsync: vsync,
@@ -144,12 +160,18 @@ class GameController with ChangeNotifier {
   void _updateGame() {
     if (_currentState != GameState.rolling) return;
 
-    ball.updatePosition();
+    ball.updatePosition(_enableBounce);
 
     if (ball.isOutOfBounds()) {
       _handleBallStop();
     }
 
+    if (!ball.inGutter) {
+      checkCollisions();
+    }
+  }
+
+  void checkCollisions() {
     // Pin collisions
     for (int i = 0; i < pinManager.pins.length; i++) {
       if (!pinManager.pins[i].isHit) {
@@ -306,7 +328,6 @@ class GameController with ChangeNotifier {
 
     notifyListeners();
   }
-
 
   void autoClearAndProceed() {
     pinManager.clearFallenPins();
