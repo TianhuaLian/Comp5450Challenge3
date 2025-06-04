@@ -73,15 +73,10 @@ class _GameScreenState extends State<GameScreen> {
 
         /// Game content
         Container(
-          margin: EdgeInsets.symmetric(horizontal: 35, vertical: 95),
+          margin: EdgeInsets.symmetric(horizontal: 50, vertical: 96),
           width: widget.containerWidth,
           height: widget.containerHeight,
           color: Colors.white.withOpacity(0),
-
-/*          margin: EdgeInsets.symmetric(horizontal: 50, vertical: 80),
-          width: widget.containerWidth,
-          height: widget.containerHeight,
-          color: Colors.brown[200],*/
 
           child: Stack(
             alignment: Alignment.center,
