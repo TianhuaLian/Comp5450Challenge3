@@ -96,6 +96,8 @@ class Frame {
     if (roll == 3) roll3 = pins;
   }
 
+  List<int?> get scores => [roll1, roll2, roll3];
+
   void reset() {
     roll1 = null;
     roll2 = null;

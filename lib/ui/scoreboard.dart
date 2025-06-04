@@ -64,6 +64,46 @@ class ScoreboardWidget extends StatelessWidget {
     );
   }
 
+    List<String> scoreToString(int frameCount, Frame frame) {
+    List<int?> scores = frame.scores; // will always has 3 entries
+    if (frameCount != 10) {
+      if (scores[0] == 10){ // strike
+        return ['', _scoreToSymbol(scores[0])];
+      } else { // spare and normal
+        return [
+          _scoreToSymbol(scores[0]),
+          ((scores[0] ?? 0) + (scores[1] ?? 0) == 10) ? '/' : _scoreToSymbol(scores[1])
+        ];
+      }
+    } else {
+      String roll1 = _scoreToSymbol(scores[0]);
+      String roll2 = _scoreToSymbol(scores[1]);
+      String roll3 = _scoreToSymbol(scores[2]);
+
+      if (scores[0]! != 10 && ((scores[0] ?? 0) + (scores[1] ?? 0)) == 10) {
+        roll2 = "/";
+      }
+
+      if (scores[1]! != 10 && ((scores[1] ?? 0) + (scores[2] ?? 0)) == 10) {
+        roll3 = "/";
+      }
+
+      return [roll1, roll2, roll3];
+    }
+  }
+
+  String _scoreToSymbol(int? score) {
+    if (score == null) {
+        return ''; // not bowled
+      } else if (score == 10) {
+        return 'X'; // strike, spares are handled separately
+      }else if(score == 0){
+        return '-'; // miss
+      } else {
+        return score.toString(); // Normal score
+      }
+  }
+
   Widget _cell(String v) => SizedBox(
     width: 12,
     child: Text(
