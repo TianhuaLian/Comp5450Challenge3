@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class ScoreManager {
   final List<Frame> frames = List.generate(11, (index) => Frame());
 
@@ -15,16 +13,16 @@ class ScoreManager {
   bool isStrike(int frame) => frames[frame].isStrike;
   bool isSpare(int frame) => frames[frame].isSpare;
 
-  /// 判断是否游戏结束（第10局打完就结束）
+  // Determine if the game is over (it's over when the 10th inning is played)
   bool get isGameOver {
     final f10 = frames[10];
-    // 没有第一球还没结束
+    // First roll
     if (f10.roll1 == null) return false;
-    // 第一球不是strike，也不是spare，两球就结束
+    // Over in two rolls if the first roll isn't a strike or a spare,
     if (!f10.isStrike && !f10.isSpare) {
       return f10.roll2 != null;
     }
-    // strike/spare要打到第三球才结束
+    // strike/spare till the third ball
     return f10.roll2 != null && f10.roll3 != null;
   }
 
@@ -50,7 +48,7 @@ class ScoreManager {
         f.score = r1 + r2;
       }
 
-      // 只有当前局投过，才累计分
+      // Only update cumulative score if the frame has been played
       if (f.hasPlayed) {
         runningTotal += f.score;
         f.cumulativeScore = runningTotal;
@@ -72,13 +70,13 @@ class Frame {
   int? roll2;
   int? roll3; // For 10th frame
   int score = 0;
-  int cumulativeScore = 0; //累计得分
+  int cumulativeScore = 0;
 
   bool get isStrike => roll1 == 10;
   bool get isSpare => (roll1 ?? 0) + (roll2 ?? 0) == 10 && roll1 != 10;
   bool get hasPlayed => roll1 != null || roll2 != null || roll3 != null;
 
-  // 用于计分板UI的投球结果显示
+  // For displaying
   String rollDisplay(int rollNumber) {
     if (rollNumber == 1) {
       return roll1 == 10 ? 'X' : (roll1 ?? '-').toString();
