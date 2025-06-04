@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import '../game/game_controller.dart';
 import '../game/pins/pin_renderer.dart';
 import '../game/game_state.dart';
+import '../ui/scoreboard.dart';
 
-class GameScreen extends StatelessWidget {
+class GameScreen extends StatefulWidget {
   final GameController gameController;
   final double containerWidth;
   final double containerHeight;
@@ -15,6 +16,13 @@ class GameScreen extends StatelessWidget {
     required this.containerHeight,
     required this.pinScale,
   });
+
+  @override
+  _GameScreenState createState() => _GameScreenState();
+}
+
+class _GameScreenState extends State<GameScreen> {
+  bool _showScoreboard = false;
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +43,15 @@ class GameScreen extends StatelessWidget {
         /// Game content
         Container(
           margin: EdgeInsets.symmetric(horizontal: 35, vertical: 95),
-          width: containerWidth,
-          height: containerHeight,
+          width: widget.containerWidth,
+          height: widget.containerHeight,
           color: Colors.white.withOpacity(0),
+
+/*          margin: EdgeInsets.symmetric(horizontal: 50, vertical: 80),
+          width: widget.containerWidth,
+          height: widget.containerHeight,
+          color: Colors.brown[200],*/
+
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -53,26 +67,26 @@ class GameScreen extends StatelessWidget {
               ),
 
               /// Render pins
-              for (var pin in gameController.pinManager.pins)
+              for (var pin in widget.gameController.pinManager.pins)
                 PinRenderer(
                   pin: pin,
-                  pinWidth: gameController.pinManager.singlePinWidth,
-                  pinHeight: gameController.pinManager.singlePinHeight,
-                  pinScale: gameController.pinScale,
+                  pinWidth: widget.gameController.pinManager.singlePinWidth,
+                  pinHeight: widget.gameController.pinManager.singlePinHeight,
+                  pinScale: widget.gameController.pinScale,
                 ),
 
               /// Render ball
               AnimatedBuilder(
-                animation: gameController.ballAnimationController,
+                animation: widget.gameController.ballAnimationController,
                 builder: (context, _) {
                   return Positioned(
-                    left: gameController.ball.position.dx -
-                        gameController.ball.radius,
-                    top: gameController.ball.position.dy -
-                        gameController.ball.radius,
+                    left: widget.gameController.ball.position.dx -
+                        widget.gameController.ball.radius,
+                    top: widget.gameController.ball.position.dy -
+                        widget.gameController.ball.radius,
                     child: Container(
-                      width: gameController.ball.radius * 2,
-                      height: gameController.ball.radius * 2,
+                      width: widget.gameController.ball.radius * 2,
+                      height: widget.gameController.ball.radius * 2,
                       decoration: BoxDecoration(
                         color: Colors.black,
                         shape: BoxShape.circle,
@@ -93,32 +107,73 @@ class GameScreen extends StatelessWidget {
         ),
 
         /// Game UI overlay
+        /// Toggle Scoreboard button and pause button
         Positioned(
-          top: 50,
-          left: 30,
-          child: Row(
+          bottom: 200,
+          right: 10,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Text('State: ${gameController.currentState.name}',
-              //     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              // SizedBox(width: 20),
-              // Text('Frame: ${gameController.currentFrame}',
-              //     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              // SizedBox(width: 20),
-              // Text('Roll: ${gameController.currentRoll}',
-              //     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              IconButton(
+                icon: Icon(Icons.insert_chart_outlined, color: Colors.white),
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.black54,
+                  padding: EdgeInsets.all(10),
+                ),
+                onPressed: () {
+                  setState(() {
+                    _showScoreboard = !_showScoreboard;
+                  });
+                },
+              ),
+              SizedBox(height: 10),
+              IconButton(
+                icon: Icon(Icons.pause, color: Colors.white),
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.black54,
+                  padding: EdgeInsets.all(10),
+                ),
+                onPressed: widget.gameController.pauseGame,
+              ),
             ],
           ),
         ),
 
-        // Special result overlay
-        if (gameController.currentState == GameState.checkingPins &&
-            gameController.specialResult != null)
+        /// Scoreboard overlay
+        if (_showScoreboard)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black54,
+              child: Center(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ScoreboardWidget(scoreManager: widget.gameController.scoreManager),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () => setState(() => _showScoreboard = false),
+                        child: Text('Close Scoreboard'),
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+        /// Special result overlay
+        if (widget.gameController.currentState == GameState.checkingPins &&
+            widget.gameController.specialResult != null)
           Positioned.fill(
             child: Container(
               color: Colors.black38,
               child: Center(
                 child: Text(
-                  gameController.specialResult!,
+                  widget.gameController.specialResult!,
                   style: TextStyle(
                     fontSize: 48,
                     fontWeight: FontWeight.bold,
@@ -144,7 +199,7 @@ class GameScreen extends StatelessWidget {
   }
 
   Widget _buildGameControls() {
-    switch (gameController.currentState) {
+    switch (widget.gameController.currentState) {
       case GameState.aiming:
         return _buildAimingControls();
       /*case GameState.checkingPins:
@@ -164,23 +219,19 @@ class GameScreen extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Throw Angle: ${gameController.ballAngle.toStringAsFixed(1)}°'),
+          Text('Throw Angle: ${widget.gameController.ballAngle.toStringAsFixed(1)}°'),
           Slider(
             min: -45,
             max: 45,
-            value: gameController.ballAngle,
-            onChanged: (value) => gameController.ballAngle = value,
+            value: widget.gameController.ballAngle,
+            onChanged: (value) => widget.gameController.ballAngle = value,
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               ElevatedButton(
-                onPressed: gameController.throwBall,
+                onPressed: widget.gameController.throwBall,
                 child: Text('Throw'),
-              ),
-              IconButton(
-                icon: Icon(Icons.pause),
-                onPressed: gameController.pauseGame,
               ),
             ],
           ),
@@ -195,10 +246,10 @@ class GameScreen extends StatelessWidget {
       color: Colors.grey[200],
       child: Column(
         children: [
-          Text('Knocked Down: ${gameController.pinManager.knockedDownPinsCount}'),
+          Text('Knocked Down: ${widget.gameController.pinManager.knockedDownPinsCount}'),
           SizedBox(height: 10),
           ElevatedButton(
-            onPressed: gameController.clearFallenPins,
+            onPressed: widget.gameController.clearFallenPins,
             child: Text('Clear Fallen Pins'),
           ),
         ],
@@ -212,12 +263,12 @@ class GameScreen extends StatelessWidget {
       color: Colors.grey[200],
       child: Column(
         children: [
-          Text('Frame ${gameController.currentFrame} Complete',
+          Text('Frame ${widget.gameController.currentFrame} Complete',
               style: TextStyle(fontWeight: FontWeight.bold)),
           SizedBox(height: 10),
           ElevatedButton(
-            onPressed: gameController.nextFrame,
-            child: Text('Continue to Frame ${gameController.currentFrame + 1}'),
+            onPressed: widget.gameController.nextFrame,
+            child: Text('Continue to Frame ${widget.gameController.currentFrame + 1}'),
           ),
         ],
       ),

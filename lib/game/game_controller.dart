@@ -269,7 +269,7 @@ class GameController with ChangeNotifier {
 
     // Clear feedback after 2 seconds
     _feedbackTimer?.cancel();
-    _feedbackTimer = Timer(Duration(seconds: 2), () {
+    _feedbackTimer = Timer(Duration(seconds: 1), () {
       autoClearAndProceed();
       _specialResult = null;
     });
@@ -367,9 +367,5 @@ class GameController with ChangeNotifier {
     ballAnimationController.dispose();
     pinManager.dispose();
     super.dispose();
-  }
-
-  void showScoreboard() {
-    debugPrint('[GameController] Show Scoreboard');
   }
 }
