@@ -150,6 +150,10 @@ class GameController with ChangeNotifier {
       _handleBallStop();
     }
 
+    checkCollisions();
+  }
+
+  void checkCollisions() {
     // Pin collisions
     for (int i = 0; i < pinManager.pins.length; i++) {
       if (!pinManager.pins[i].isHit) {
