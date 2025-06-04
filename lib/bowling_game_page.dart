@@ -92,7 +92,7 @@ class _BowlingGamePageState extends State<BowlingGamePage>
         return GameOverScreen(
           totalScore: gameController.scoreManager.totalScore,
           onRestart: gameController.restartGame,
-          onScoreboard: () => showScoreboard(context),
+          //onScoreboard: () => showScoreboard(context),
         );
       case GameState.pause:
         return Pause(onResume: gameController.resumeGame);
@@ -106,7 +106,7 @@ class _BowlingGamePageState extends State<BowlingGamePage>
     }
   }
 
-  void showScoreboard(BuildContext context) {
+  /*void showScoreboard(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -120,5 +120,5 @@ class _BowlingGamePageState extends State<BowlingGamePage>
         ],
       ),
     );
-  }
+  }*/
 }
