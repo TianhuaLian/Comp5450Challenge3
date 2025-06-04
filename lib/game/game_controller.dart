@@ -13,7 +13,6 @@ class GameController with ChangeNotifier {
   final TickerProvider vsync;
   final AudioManager _audioManager = AudioManager();
 
-  final Random _rng = Random();
   final List<Future<AudioPlayer>> audioBus = [];
   final double containerWidth;
   final double containerHeight;
@@ -376,10 +375,10 @@ class GameController with ChangeNotifier {
   }
 
   void _playPinCollisionAudio() {
-    int track = _rng.nextInt(5);
-    _audioManager.playSound('audio/pin_knock_$track.wav');
+    _audioManager.playPinSound();
   }
 
+  @override
   void dispose() {
     _audioManager.dispose();
     ballAnimationController.dispose();
