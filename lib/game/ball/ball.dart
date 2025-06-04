@@ -8,6 +8,7 @@ class Ball {
   bool inMotion;
   final double containerWidth;
   final double containerHeight;
+  bool inGutter = false;
 
   Ball({
     required this.position,
@@ -18,18 +19,34 @@ class Ball {
     this.inMotion = false,
   });
 
-  void updatePosition() {
+  void updatePosition(bool enableBounce) {
     if (!inMotion) return;
 
     position += velocity;
 
-    // Boundary collision handling
-    if (position.dx - radius <= 0) {
-      position = Offset(radius, position.dy);
+    // Handle side collisions
+    if (!inGutter) {
+      if (position.dx - radius <= 0) {
+        _handleSideCollision(0, enableBounce);
+      } else if (position.dx + radius >= containerWidth) {
+        _handleSideCollision(containerWidth, enableBounce);
+      }
+    }
+  }
+
+  void _handleSideCollision(double boundaryX, bool enableBounce) {
+    if (enableBounce) {
+      // Bounce behavior
+      position = Offset(
+          boundaryX == 0 ? radius : containerWidth - radius,
+          position.dy
+      );
       velocity = Offset(-velocity.dx * 0.7, velocity.dy);
-    } else if (position.dx + radius >= containerWidth) {
-      position = Offset(containerWidth - radius, position.dy);
-      velocity = Offset(-velocity.dx * 0.7, velocity.dy);
+    } else {
+      // Gutter behavior
+      inGutter = true;
+      velocity = Offset(0, -velocity.dy.abs() + 3.0);
+      velocity = Offset(velocity.dx , velocity.dy);
     }
   }
 
@@ -42,6 +59,7 @@ class Ball {
     position = newPosition;
     velocity = Offset.zero;
     inMotion = false;
+    inGutter = false;
   }
 
   void throwBall(double angle) {

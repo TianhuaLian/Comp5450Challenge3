@@ -43,6 +43,15 @@ class GameController with ChangeNotifier {
     notifyListeners();
   }
 
+  // Toggle for wall bounce
+  bool _enableBounce = true;
+
+  bool get enableBounce => _enableBounce;
+  set enableBounce(bool value) {
+    _enableBounce = value;
+    notifyListeners();
+  }
+
   // Special result for strikes or spares
   bool isStrike(int frame) {
     return scoreManager.frames[frame].isStrike;
@@ -144,13 +153,15 @@ class GameController with ChangeNotifier {
   void _updateGame() {
     if (_currentState != GameState.rolling) return;
 
-    ball.updatePosition();
+    ball.updatePosition(_enableBounce);
 
     if (ball.isOutOfBounds()) {
       _handleBallStop();
     }
 
-    checkCollisions();
+    if (!ball.inGutter) {
+      checkCollisions();
+    }
   }
 
   void checkCollisions() {
