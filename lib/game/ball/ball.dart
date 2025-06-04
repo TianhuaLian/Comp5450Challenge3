@@ -45,6 +45,12 @@ class Ball {
     } else {
       // Gutter behavior
       inGutter = true;
+      // Move ball to the gutter side
+      position = Offset(
+          boundaryX == 0 ? 0 : containerWidth,
+          position.dy
+      );
+
       velocity = Offset(0, -velocity.dy.abs() + 3.0);
       velocity = Offset(velocity.dx , velocity.dy);
     }

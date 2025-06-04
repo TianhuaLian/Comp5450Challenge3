@@ -74,8 +74,8 @@ class _GameScreenState extends State<GameScreen> {
 
         /// Game content
         Container(
-          margin: EdgeInsets.symmetric(horizontal: 50, vertical: 96),
-          width: widget.containerWidth,
+          margin: EdgeInsets.symmetric(horizontal: 25, vertical: 96),
+          width: widget.containerWidth + widget.gameController.ball.radius * 2,
           height: widget.containerHeight,
           color: Colors.white.withOpacity(0),
 
@@ -107,8 +107,7 @@ class _GameScreenState extends State<GameScreen> {
                 animation: widget.gameController.ballAnimationController,
                 builder: (context, _) {
                   return Positioned(
-                    left: widget.gameController.ball.position.dx -
-                        widget.gameController.ball.radius,
+                    left: widget.gameController.ball.position.dx,
                     top: widget.gameController.ball.position.dy -
                         widget.gameController.ball.radius,
                     child: Container(

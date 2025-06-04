@@ -33,6 +33,12 @@ class SettingsMenu extends StatelessWidget {
                     value: gameController.enableBounce,
                     onChanged: (value) {
                       gameController.enableBounce = value;
+                      /*if(value) {
+                        gameController.middleX = gameController.ball.position.dx -
+                            gameController.ball.radius;
+                      } else {
+                        gameController.middleX = gameController.ball.position.dx;
+                      }*/
                     },
                   ),
                 ],
