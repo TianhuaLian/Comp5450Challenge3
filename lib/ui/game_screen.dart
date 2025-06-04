@@ -24,15 +24,20 @@ class GameScreen extends StatelessWidget {
         Container(
           width: double.infinity,
           height: double.infinity,
-          color: Colors.grey,
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/background.png'),
+              fit: BoxFit.cover,
+            ),
+          ),
         ),
 
         /// Game content
         Container(
-          margin: EdgeInsets.symmetric(horizontal: 50, vertical: 80),
+          margin: EdgeInsets.symmetric(horizontal: 35, vertical: 95),
           width: containerWidth,
           height: containerHeight,
-          color: Colors.brown[200],
+          color: Colors.white.withOpacity(0),
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -105,6 +110,28 @@ class GameScreen extends StatelessWidget {
           ),
         ),
 
+        // Special result overlay
+        if (gameController.currentState == GameState.checkingPins &&
+            gameController.specialResult != null)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black38,
+              child: Center(
+                child: Text(
+                  gameController.specialResult!,
+                  style: TextStyle(
+                    fontSize: 48,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.yellow,
+                    shadows: [
+                      Shadow(blurRadius: 10, color: Colors.black)
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
         /// Bottom controls
         Positioned(
           bottom: 0,
@@ -120,8 +147,8 @@ class GameScreen extends StatelessWidget {
     switch (gameController.currentState) {
       case GameState.aiming:
         return _buildAimingControls();
-      case GameState.checkingPins:
-        return _buildCheckingPinsControls();
+      /*case GameState.checkingPins:
+        return _buildCheckingPinsControls();*/
       case GameState.frameEnd:
         return _buildFrameEndControls();
       default:

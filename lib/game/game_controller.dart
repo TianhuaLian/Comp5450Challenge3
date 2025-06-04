@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:comp5450challenge3/audio/audio_manager.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +31,7 @@ class GameController with ChangeNotifier {
   int _currentFrame = 1;
   int _currentRoll = 1;
   double _ballAngle = 0.0;
-  
+
   bool get ballInMotion => ball.inMotion;
   int get knockedDownPinsCount => pinManager.knockedDownPinsCount;
   int get totalScore => scoreManager.totalScore;
@@ -42,6 +43,14 @@ class GameController with ChangeNotifier {
     _ballAngle = value;
     notifyListeners();
   }
+
+  // Special result for strikes or spares
+  bool isStrike(int frame) {
+    return scoreManager.frames[frame].isStrike;
+  }
+  String? _specialResult;
+  String? get specialResult => _specialResult;
+  Timer? _feedbackTimer;
 
   GameController({
     required this.vsync,
@@ -263,6 +272,20 @@ class GameController with ChangeNotifier {
     final pinsKnocked = pinManager.knockedDownPinsCount;
     scoreManager.updateScore(_currentFrame, _currentRoll, pinsKnocked);
 
+    // Check for special results
+    if (scoreManager.isStrike(_currentFrame)) {
+      _specialResult = 'STRIKE!';
+    } else if (scoreManager.isSpare(_currentFrame)) {
+      _specialResult = 'SPARE!';
+    }
+
+    // Clear feedback after 2 seconds
+    _feedbackTimer?.cancel();
+    _feedbackTimer = Timer(Duration(seconds: 2), () {
+      autoClearAndProceed();
+      _specialResult = null;
+    });
+
     _currentState = GameState.checkingPins;
     notifyListeners();
   }
@@ -285,36 +308,28 @@ class GameController with ChangeNotifier {
     notifyListeners();
   }
 
-  // void nextFrame() {
-  //   if (_currentState != GameState.frameEnd) return;
-  //
-  //   if (_currentFrame == 10) {
-  //     if (scoreManager.isStrike(10) || scoreManager.isSpare(10)) {
-  //       // Allow for third roll
-  //       _currentRoll = 3;
-  //       resetGame();
-  //       _currentState = GameState.aiming;
-  //     } else {
-  //       _currentState = GameState.gameOver;
-  //     }
-  //   } else {
-  //     _currentFrame++;
-  //     _currentRoll = 1;
-  //     resetGame();
-  //     _currentState = GameState.aiming;
-  //   }
-  //
-  //   notifyListeners();
-  // }
+
+  void autoClearAndProceed() {
+    pinManager.clearFallenPins();
+
+    if (_currentRoll == 1 && !isStrike(_currentFrame)) {
+      _currentRoll = 2;
+      _currentState = GameState.aiming;
+    } else {
+      _currentState = GameState.frameEnd;
+    }
+
+    notifyListeners();
+  }
+
   void nextFrame() {
     if (_currentState != GameState.frameEnd) return;
 
     if (_currentFrame == 10) {
-      // === 核心修正：第10局投球完毕，才gameOver ===
       if (scoreManager.isGameOver) {
         _currentState = GameState.gameOver;
       } else {
-        // 还没结束，推进到下一球（roll）
+        // The 10th frame rules
         _currentRoll += 1;
         resetGame();
         _currentState = GameState.aiming;

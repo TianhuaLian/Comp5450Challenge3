@@ -14,7 +14,7 @@ class BowlingGamePage extends StatefulWidget {
 
 class _BowlingGamePageState extends State<BowlingGamePage>
     with TickerProviderStateMixin {
-  final double containerWidth = 300.0;
+  final double containerWidth = 330.0;
   final double containerHeight = 600.0;
   final double pinScale = 1.8;
 
