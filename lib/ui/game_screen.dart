@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import '../game/game_controller.dart';
 import '../game/pins/pin_renderer.dart';
 import '../game/game_state.dart';
+import '../ui/scoreboard.dart';
 
-class GameScreen extends StatelessWidget {
+class GameScreen extends StatefulWidget {
   final GameController gameController;
   final double containerWidth;
   final double containerHeight;
@@ -14,13 +15,51 @@ class GameScreen extends StatelessWidget {
     required this.containerWidth,
     required this.containerHeight,
     required this.pinScale,
-  });
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  State<GameScreen> createState() => _GameScreenState();
+}
+
+class _GameScreenState extends State<GameScreen> {
+  bool _showScoreboard = false;
+  Offset? _swipeStart;
+  DateTime? _swipeStartTime;
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        /// Background filled with a color
+    // Wrap the whole Stack with GestureDetector for better swipe detection
+    return GestureDetector(
+      onPanStart: (details) {
+        if (widget.gameController.currentState == GameState.aiming) {
+          _swipeStart = details.localPosition;
+          _swipeStartTime = DateTime.now();
+        }
+      },
+      onPanEnd: (details) {
+        if (widget.gameController.currentState == GameState.aiming &&
+            _swipeStart != null) {
+          final velocity = details.velocity.pixelsPerSecond;
+          final dx = velocity.dx;
+          final dy = velocity.dy;
+
+          // Only consider upward swipes (negative dy)
+          if (dy < -200) {
+            // Calculate angle: left/right swipe affects angle
+            final angle = (dx / 1000).clamp(-1.0, 1.0) * 45; // -45° to 45°
+            widget.gameController.ballAngle = angle;
+
+            // Optionally, use dy for power (not shown here)
+            widget.gameController.throwBall();
+          }
+          _swipeStart = null;
+          _swipeStartTime = null;
+        }
+      },
+      child: Stack(
+        children: [
+          /// Background filled with a color
         Container(
           width: double.infinity,
           height: double.infinity,
@@ -34,10 +73,11 @@ class GameScreen extends StatelessWidget {
 
         /// Game content
         Container(
-          margin: EdgeInsets.symmetric(horizontal: 35, vertical: 95),
-          width: containerWidth,
-          height: containerHeight,
+          margin: EdgeInsets.symmetric(horizontal: 50, vertical: 96),
+          width: widget.containerWidth,
+          height: widget.containerHeight,
           color: Colors.white.withOpacity(0),
+
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -53,36 +93,33 @@ class GameScreen extends StatelessWidget {
               ),
 
               /// Render pins
-              for (var pin in gameController.pinManager.pins)
+              for (var pin in widget.gameController.pinManager.pins)
                 PinRenderer(
                   pin: pin,
-                  pinWidth: gameController.pinManager.singlePinWidth,
-                  pinHeight: gameController.pinManager.singlePinHeight,
-                  pinScale: gameController.pinScale,
+                  pinWidth: widget.gameController.pinManager.singlePinWidth,
+                  pinHeight: widget.gameController.pinManager.singlePinHeight,
+                  pinScale: widget.gameController.pinScale,
                 ),
 
               /// Render ball
               AnimatedBuilder(
-                animation: gameController.ballAnimationController,
+                animation: widget.gameController.ballAnimationController,
                 builder: (context, _) {
                   return Positioned(
-                    left: gameController.ball.position.dx -
-                        gameController.ball.radius,
-                    top: gameController.ball.position.dy -
-                        gameController.ball.radius,
+                    left: widget.gameController.ball.position.dx -
+                        widget.gameController.ball.radius,
+                    top: widget.gameController.ball.position.dy -
+                        widget.gameController.ball.radius,
                     child: Container(
-                      width: gameController.ball.radius * 2,
-                      height: gameController.ball.radius * 2,
+                      width: widget.gameController.ball.radius * 2,
+                      height: widget.gameController.ball.radius * 2,
                       decoration: BoxDecoration(
-                        color: Colors.black,
                         shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey,
-                            blurRadius: 3,
-                            spreadRadius: 1,
-                          )
-                        ],
+                        color: Colors.blue,
+                        image: DecorationImage(
+                          image: AssetImage('assets/images/ball.png'),
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   );
@@ -93,32 +130,73 @@ class GameScreen extends StatelessWidget {
         ),
 
         /// Game UI overlay
+        /// Toggle Scoreboard button and pause button
         Positioned(
-          top: 50,
-          left: 30,
-          child: Row(
+          bottom: 200,
+          right: 10,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Text('State: ${gameController.currentState.name}',
-              //     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              // SizedBox(width: 20),
-              // Text('Frame: ${gameController.currentFrame}',
-              //     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              // SizedBox(width: 20),
-              // Text('Roll: ${gameController.currentRoll}',
-              //     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              IconButton(
+                icon: Icon(Icons.insert_chart_outlined, color: Colors.white),
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.black54,
+                  padding: EdgeInsets.all(10),
+                ),
+                onPressed: () {
+                  setState(() {
+                    _showScoreboard = !_showScoreboard;
+                  });
+                },
+              ),
+              SizedBox(height: 10),
+              IconButton(
+                icon: Icon(Icons.pause, color: Colors.white),
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.black54,
+                  padding: EdgeInsets.all(10),
+                ),
+                onPressed: widget.gameController.pauseGame,
+              ),
             ],
           ),
         ),
 
-        // Special result overlay
-        if (gameController.currentState == GameState.checkingPins &&
-            gameController.specialResult != null)
+        /// Scoreboard overlay
+        if (_showScoreboard)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black54,
+              child: Center(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ScoreboardWidget(scoreManager: widget.gameController.scoreManager),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () => setState(() => _showScoreboard = false),
+                        child: Text('Close Scoreboard'),
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+        /// Special result overlay
+        if (widget.gameController.currentState == GameState.checkingPins &&
+            widget.gameController.specialResult != null)
           Positioned.fill(
             child: Container(
               color: Colors.black38,
               child: Center(
                 child: Text(
-                  gameController.specialResult!,
+                  widget.gameController.specialResult!,
                   style: TextStyle(
                     fontSize: 48,
                     fontWeight: FontWeight.bold,
@@ -132,19 +210,20 @@ class GameScreen extends StatelessWidget {
             ),
           ),
 
-        /// Bottom controls
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: _buildGameControls(),
-        ),
-      ],
+          /// Bottom controls
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: _buildGameControls(),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildGameControls() {
-    switch (gameController.currentState) {
+    switch (widget.gameController.currentState) {
       case GameState.aiming:
         return _buildAimingControls();
       /*case GameState.checkingPins:
@@ -156,7 +235,7 @@ class GameScreen extends StatelessWidget {
     }
   }
 
-  /// Aiming controls for the game
+  /// Aiming controls for the game (swipe instructions only)
   Widget _buildAimingControls() {
     return Container(
       padding: EdgeInsets.all(16),
@@ -164,25 +243,14 @@ class GameScreen extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Throw Angle: ${gameController.ballAngle.toStringAsFixed(1)}°'),
-          Slider(
-            min: -45,
-            max: 45,
-            value: gameController.ballAngle,
-            onChanged: (value) => gameController.ballAngle = value,
+          Text(
+            'Swipe up to throw!\nSwipe direction controls angle.',
+            textAlign: TextAlign.center,
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: gameController.throwBall,
-                child: Text('Throw'),
-              ),
-              IconButton(
-                icon: Icon(Icons.pause),
-                onPressed: gameController.pauseGame,
-              ),
-            ],
+          SizedBox(height: 8),
+          Text(
+            'Last Angle: ${widget.gameController.ballAngle.toStringAsFixed(1)}°',
+            style: TextStyle(fontSize: 16),
           ),
         ],
       ),
@@ -195,10 +263,10 @@ class GameScreen extends StatelessWidget {
       color: Colors.grey[200],
       child: Column(
         children: [
-          Text('Knocked Down: ${gameController.pinManager.knockedDownPinsCount}'),
+          Text('Knocked Down: ${widget.gameController.pinManager.knockedDownPinsCount}'),
           SizedBox(height: 10),
           ElevatedButton(
-            onPressed: gameController.clearFallenPins,
+            onPressed: widget.gameController.clearFallenPins,
             child: Text('Clear Fallen Pins'),
           ),
         ],
@@ -212,12 +280,12 @@ class GameScreen extends StatelessWidget {
       color: Colors.grey[200],
       child: Column(
         children: [
-          Text('Frame ${gameController.currentFrame} Complete',
+          Text('Frame ${widget.gameController.currentFrame} Complete',
               style: TextStyle(fontWeight: FontWeight.bold)),
           SizedBox(height: 10),
           ElevatedButton(
-            onPressed: gameController.nextFrame,
-            child: Text('Continue to Frame ${gameController.currentFrame + 1}'),
+            onPressed: widget.gameController.nextFrame,
+            child: Text('Continue to Frame ${widget.gameController.currentFrame + 1}'),
           ),
         ],
       ),

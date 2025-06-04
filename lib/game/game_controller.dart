@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'game_state.dart';
 import '../game/pins/pin_manager.dart';
 import '../game/pins/pin_data.dart';
-import '/examples/ball.dart';
-import '../score/score_manager.dart';
+import 'ball/ball.dart';
+import 'score/score_manager.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 class GameController with ChangeNotifier {
@@ -75,7 +75,7 @@ class GameController with ChangeNotifier {
     // Initialize Ball instance
     ball = Ball(
       position: Offset(containerWidth / 2, containerHeight - 50),
-      radius: 20.0,
+      radius: 25.0,
       containerWidth: containerWidth,
       containerHeight: containerHeight,
     );
@@ -280,7 +280,7 @@ class GameController with ChangeNotifier {
 
     // Clear feedback after 2 seconds
     _feedbackTimer?.cancel();
-    _feedbackTimer = Timer(Duration(seconds: 2), () {
+    _feedbackTimer = Timer(Duration(seconds: 1), () {
       autoClearAndProceed();
       _specialResult = null;
     });
@@ -384,9 +384,5 @@ class GameController with ChangeNotifier {
     ballAnimationController.dispose();
     pinManager.dispose();
     super.dispose();
-  }
-
-  void showScoreboard() {
-    debugPrint('[GameController] Show Scoreboard');
   }
 }

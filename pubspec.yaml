@@ -72,6 +72,7 @@ flutter:
     - assets/audio/pin_knock_3.wav
     - assets/audio/pin_knock_4.wav
     - assets/audio/pin_knock_5.wav
+    - assets/images/ball.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
