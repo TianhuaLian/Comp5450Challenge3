@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'game_state.dart';
 import '../game/pins/pin_manager.dart';
 import '../game/pins/pin_data.dart';
-import '/examples/ball.dart';
-import '../score/score_manager.dart';
+import 'ball/ball.dart';
+import 'score/score_manager.dart';
 
 class GameController with ChangeNotifier {
   final TickerProvider vsync;
@@ -70,7 +70,7 @@ class GameController with ChangeNotifier {
     // Initialize Ball instance
     ball = Ball(
       position: Offset(containerWidth / 2, containerHeight - 50),
-      radius: 20.0,
+      radius: 25.0,
       containerWidth: containerWidth,
       containerHeight: containerHeight,
     );

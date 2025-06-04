@@ -119,15 +119,12 @@ class _GameScreenState extends State<GameScreen> {
                       width: widget.gameController.ball.radius * 2,
                       height: widget.gameController.ball.radius * 2,
                       decoration: BoxDecoration(
-                        color: Colors.black,
                         shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey,
-                            blurRadius: 3,
-                            spreadRadius: 1,
-                          )
-                        ],
+                        color: Colors.blue,
+                        image: DecorationImage(
+                          image: AssetImage('assets/images/ball.png'),
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   );

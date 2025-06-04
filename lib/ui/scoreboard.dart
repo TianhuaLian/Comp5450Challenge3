@@ -1,6 +1,5 @@
-// lib/ui/scoreboard.dart
 import 'package:flutter/material.dart';
-import '../score/score_manager.dart';
+import '../game/score/score_manager.dart';
 
 class ScoreboardWidget extends StatelessWidget {
   final ScoreManager scoreManager;
