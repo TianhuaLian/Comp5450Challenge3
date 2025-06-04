@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 class GameOverScreen extends StatelessWidget {
   final int totalScore;
   final VoidCallback onRestart;
-  final VoidCallback onScoreboard;
+  //final VoidCallback onScoreboard;
 
   const GameOverScreen({
     super.key,
     required this.totalScore,
     required this.onRestart,
-    required this.onScoreboard,
+    //required this.onScoreboard,
   });
 
   @override
@@ -44,7 +44,7 @@ class GameOverScreen extends StatelessWidget {
                 style: TextStyle(fontSize: 20, color: Colors.black),
               ),
             ),
-            const SizedBox(height: 20),
+            /*const SizedBox(height: 20),
             ElevatedButton(
               onPressed: onScoreboard,
               style: ElevatedButton.styleFrom(
@@ -55,7 +55,7 @@ class GameOverScreen extends StatelessWidget {
                 'Scoreboard',
                 style: TextStyle(fontSize: 20, color: Colors.black),
               ),
-            ),
+            ),*/
           ],
         ),
       ),

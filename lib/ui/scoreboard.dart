@@ -9,16 +9,16 @@ class ScoreboardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 180, // 每行60，高度共120，可根据需要微调
+      height: 180, // 60 per row
       child: GridView.builder(
-        physics: NeverScrollableScrollPhysics(), // 防止内部滚动
+        physics: NeverScrollableScrollPhysics(), // Prevent scrolling
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         itemCount: 10,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 5,          // 5列，2行
+          crossAxisCount: 5,          // 5 frames per row, 2 rows
           mainAxisSpacing: 8,
           crossAxisSpacing: 8,
-          childAspectRatio: 1.1,      // 格子形状可调整
+          childAspectRatio: 1.1,      // Aspect ratio for each cell
         ),
         itemBuilder: (context, index) {
           final frame = scoreManager.frames[index + 1];
@@ -47,7 +47,7 @@ class ScoreboardWidget extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 4),
-                // 只有投过这一局才显示累计分
+                // Show score only if the frame has been played
                 Text(
                   frame.hasPlayed ? '${frame.cumulativeScore}' : '',
                   style: TextStyle(
