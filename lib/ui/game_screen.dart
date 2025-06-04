@@ -15,20 +15,51 @@ class GameScreen extends StatefulWidget {
     required this.containerWidth,
     required this.containerHeight,
     required this.pinScale,
-  });
+    Key? key,
+  }) : super(key: key);
 
   @override
-  _GameScreenState createState() => _GameScreenState();
+  State<GameScreen> createState() => _GameScreenState();
 }
 
 class _GameScreenState extends State<GameScreen> {
   bool _showScoreboard = false;
+  Offset? _swipeStart;
+  DateTime? _swipeStartTime;
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        /// Background filled with a color
+    // Wrap the whole Stack with GestureDetector for better swipe detection
+    return GestureDetector(
+      onPanStart: (details) {
+        if (widget.gameController.currentState == GameState.aiming) {
+          _swipeStart = details.localPosition;
+          _swipeStartTime = DateTime.now();
+        }
+      },
+      onPanEnd: (details) {
+        if (widget.gameController.currentState == GameState.aiming &&
+            _swipeStart != null) {
+          final velocity = details.velocity.pixelsPerSecond;
+          final dx = velocity.dx;
+          final dy = velocity.dy;
+
+          // Only consider upward swipes (negative dy)
+          if (dy < -200) {
+            // Calculate angle: left/right swipe affects angle
+            final angle = (dx / 1000).clamp(-1.0, 1.0) * 45; // -45° to 45°
+            widget.gameController.ballAngle = angle;
+
+            // Optionally, use dy for power (not shown here)
+            widget.gameController.throwBall();
+          }
+          _swipeStart = null;
+          _swipeStartTime = null;
+        }
+      },
+      child: Stack(
+        children: [
+          /// Background filled with a color
         Container(
           width: double.infinity,
           height: double.infinity,
@@ -187,14 +218,15 @@ class _GameScreenState extends State<GameScreen> {
             ),
           ),
 
-        /// Bottom controls
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: _buildGameControls(),
-        ),
-      ],
+          /// Bottom controls
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: _buildGameControls(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -211,7 +243,7 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
-  /// Aiming controls for the game
+  /// Aiming controls for the game (swipe instructions only)
   Widget _buildAimingControls() {
     return Container(
       padding: EdgeInsets.all(16),
@@ -219,21 +251,14 @@ class _GameScreenState extends State<GameScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Throw Angle: ${widget.gameController.ballAngle.toStringAsFixed(1)}°'),
-          Slider(
-            min: -45,
-            max: 45,
-            value: widget.gameController.ballAngle,
-            onChanged: (value) => widget.gameController.ballAngle = value,
+          Text(
+            'Swipe up to throw!\nSwipe direction controls angle.',
+            textAlign: TextAlign.center,
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: widget.gameController.throwBall,
-                child: Text('Throw'),
-              ),
-            ],
+          SizedBox(height: 8),
+          Text(
+            'Last Angle: ${widget.gameController.ballAngle.toStringAsFixed(1)}°',
+            style: TextStyle(fontSize: 16),
           ),
         ],
       ),
