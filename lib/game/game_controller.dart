@@ -1,13 +1,19 @@
 import 'dart:math';
+import 'package:comp5450challenge3/audio/audio_manager.dart';
 import 'package:flutter/material.dart';
 import 'game_state.dart';
 import '../game/pins/pin_manager.dart';
 import '../game/pins/pin_data.dart';
 import '/examples/ball.dart';
 import '../score/score_manager.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class GameController with ChangeNotifier {
   final TickerProvider vsync;
+  final AudioManager _audioManager = AudioManager();
+
+  final Random _rng = Random();
+  final List<Future<AudioPlayer>> audioBus = [];
   final double containerWidth;
   final double containerHeight;
   final double pinScale;
@@ -101,7 +107,12 @@ class GameController with ChangeNotifier {
 
   void throwBall() {
     if (_currentState != GameState.aiming) return;
-
+    Future.wait(audioBus).then((List<AudioPlayer> audioPlayerList) {
+      for (AudioPlayer audioPlayer in audioPlayerList){
+        audioPlayer.dispose();
+      }
+      audioPlayerList.clear();
+    });
     ball.throwBall(_ballAngle);
     ballAnimationController.repeat();
     _currentState = GameState.rolling;
@@ -167,6 +178,7 @@ class GameController with ChangeNotifier {
             displacementX = pinManager.random.nextDouble() * 15 + 15;
           }
 
+          _playPinCollisionAudio();
           _startPinAnimation(
               pinManager.pins[i],
               targetRotationAngle,
@@ -228,7 +240,7 @@ class GameController with ChangeNotifier {
             } else {
               displacementX = pinManager.random.nextDouble() * 10 + 10;
             }
-
+            _playPinCollisionAudio();
             _startPinAnimation(
                 standingPin,
                 targetRotationAngle,
@@ -348,7 +360,13 @@ class GameController with ChangeNotifier {
     });
   }
 
+  void _playPinCollisionAudio() {
+    int track = _rng.nextInt(5);
+    _audioManager.playSound('audio/pin_knock_$track.wav');
+  }
+
   void dispose() {
+    _audioManager.dispose();
     ballAnimationController.dispose();
     pinManager.dispose();
     super.dispose();
